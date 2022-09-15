@@ -4,7 +4,10 @@ package com.example.estest.service;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.*;
@@ -22,8 +25,8 @@ public class DataPipeline {
         Sample sample = new Sample();
 
 
-        for (int i = 1; i <= 25000; i += 5000) {
-            sample.run(i, i + 4999);
+        for (int i = 3001 ; i <= 5500; i += 500) {
+            sample.run(i, i + 499);
         }
 
     }
@@ -104,7 +107,6 @@ public class DataPipeline {
             }
         }
 
-
         /**
          * 실행! (expression을 받아 특허 엑셀을 다운로드 받음)
          *
@@ -116,7 +118,7 @@ public class DataPipeline {
             try {
                 String fileUrl = fetchFileDownloadUrlByExpression(from, to);
                 if (Objects.equals(fileUrl, "-1")) {
-                    System.out.println("Error 다시 시도 하장");
+                    System.out.println("Error 다시 시도");
                     return 0;
                 }
                 String filename = downloadFile(fileUrl);
@@ -124,7 +126,7 @@ public class DataPipeline {
                 if (filename == null) {
                     return 0;
                 }
-                testxls(filename,from,to);
+                testxls(filename, from, to);
 
 
             } catch (IOException e) {
@@ -152,22 +154,13 @@ public class DataPipeline {
             out.close();
             return fileName;
         }
-        public static void echoAsCSV(Sheet sheet) {
-            Row row = null;
-            for (int i = 0; i < sheet.getLastRowNum(); i++) {
-                row = sheet.getRow(i);
-                for (int j = 0; j < row.getLastCellNum(); j++) {
-                    System.out.print("\"" + row.getCell(j) + "\";");
-                }
-                System.out.println();
-            }
-        }
+
         public void xlstocsv(String filename) throws IOException {
-// Creating a inputFile object with specific file path
-            File inputFile = new File(defaultPath+filename+".xls");
+            // Creating a inputFile object with specific file path
+            File inputFile = new File(defaultPath + filename + ".xls");
 
             // Creating a outputFile object to write excel data to csv
-            File outputFile = new File(csvPath+filename+".csv");
+            File outputFile = new File(csvPath + filename + ".csv");
 
             // For storing data into CSV files
             StringBuffer data = new StringBuffer();
@@ -209,11 +202,23 @@ public class DataPipeline {
                             case NUMERIC:
                                 data.append(cell.getNumericCellValue() + ",");
                                 break;
-
                             case STRING:
                                 if(cell.getStringCellValue().contains(",")){
-                                        String t= "\""+cell.getStringCellValue()+"\"";
-                                        data.append(t+",");
+                                    // , " 처리
+                                    if (cell.getStringCellValue().contains("\"")){
+                                        data.append("\"").append(cell.getStringCellValue().replaceAll("\"", "\"\"")).append("\",");
+                                    }
+                                    // , 처리
+                                    else{
+                                        data.append("\""+cell.getStringCellValue()+"\""+",");
+                                    }
+                                }
+                                // " 처리
+                                else if(cell.getStringCellValue().contains("\"")) {
+                                    data.append("\"").append(cell.getStringCellValue().replaceAll("\"", "\"\"")).append("\",");
+                                }
+                                else if (cell.getStringCellValue().contains("skip")) {
+                                    continue;
                                 }
                                 else{
                                     data.append(cell.getStringCellValue() + ",");
@@ -301,10 +306,10 @@ public class DataPipeline {
             return result.toString();
         }
 
-        public String testxls(String filename,int from,int to) throws IOException, InvalidFormatException {
+        public String testxls(String filename, int from, int to) throws IOException, InvalidFormatException {
 
-            String patentdata = "patent"+from+"-"+to;
-            String newfile = defaultPath + patentdata+".xls";
+            String patentdata = "patent" + from + "-" + to;
+            String newfile = defaultPath + patentdata + ".xls";
             File oldfile = new File(defaultPath + filename);
             InputStreamReader isr = new InputStreamReader(System.in);
             FileInputStream file = new FileInputStream(defaultPath + filename);
@@ -316,7 +321,6 @@ public class DataPipeline {
                 HSSFWorkbook workbook = new HSSFWorkbook(file);
 
                 HSSFSheet sheet = workbook.getSheetAt(0);
-
                 for (int i = 0; i < 7; i++) {
                     if (sheet.getRow(i) == null) {
                         continue;
@@ -324,11 +328,22 @@ public class DataPipeline {
                         sheet.removeRow(sheet.getRow(i));
                     }
                 }
+                int rows = sheet.getPhysicalNumberOfRows();
+                System.out.println(rows);
+                for (int i = 0; i< rows+7; i ++) {
+                    if (sheet.getRow(i) == null) {
+                        continue;
+                    }
+                    else {
+                        sheet.getRow(i).getCell(0).setCellValue("skip");
+                    }
 
-                FileOutputStream fileOutputStream = new FileOutputStream(defaultPath + patentdata+".xls");
+                }
+
+                FileOutputStream fileOutputStream = new FileOutputStream(defaultPath + patentdata + ".xls");
                 workbook.write(fileOutputStream);
 
-                if(oldfile.exists()) {
+                if (oldfile.exists()) {
                     oldfile.delete();
                 }
 

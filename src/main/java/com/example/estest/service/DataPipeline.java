@@ -260,7 +260,7 @@ public class DataPipeline {
             map.put("sortField", "");
             map.put("sortState", "");
             map.put("sortField1", "AD");
-            map.put("sortState1", "DESC");
+            map.put("sortState1", "ASC");
             map.put("sortField2", "");
             map.put("sortState2", "");
             map.put("collections", "");
@@ -321,7 +321,7 @@ public class DataPipeline {
                 HSSFWorkbook workbook = new HSSFWorkbook(file);
 
                 HSSFSheet sheet = workbook.getSheetAt(0);
-                for (int i = 0; i < 7; i++) {
+                for (int i = 0; i < 8; i++) {
                     if (sheet.getRow(i) == null) {
                         continue;
                     } else {
@@ -330,7 +330,7 @@ public class DataPipeline {
                 }
                 int rows = sheet.getPhysicalNumberOfRows();
                 System.out.println(rows);
-                for (int i = 0; i< rows+7; i ++) {
+                for (int i = 0; i< rows+8; i ++) {
                     if (sheet.getRow(i) == null) {
                         continue;
                     }

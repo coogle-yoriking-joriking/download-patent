@@ -25,8 +25,8 @@ public class DataPipeline {
         Sample sample = new Sample();
 
 
-        for (int i = 3001 ; i <= 5500; i += 500) {
-            sample.run(i, i + 499);
+        for (int i = 2170001 ; i <= 3000000; i += 5000) {
+            sample.run(i, i + 4999);
         }
 
     }
@@ -238,7 +238,7 @@ public class DataPipeline {
                 }
 
                 FileOutputStream fos = new FileOutputStream(outputFile);
-                fos.write(data.toString().getBytes());
+                fos.write(data.toString().getBytes(StandardCharsets.UTF_8));
                 fos.close();
 
             } catch (Exception e) {
@@ -329,7 +329,6 @@ public class DataPipeline {
                     }
                 }
                 int rows = sheet.getPhysicalNumberOfRows();
-                System.out.println(rows);
                 for (int i = 0; i< rows+8; i ++) {
                     if (sheet.getRow(i) == null) {
                         continue;

@@ -14,24 +14,30 @@ import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class DataPipeline {
 
     public static void main(String[] args) throws IOException {
         Sample sample = new Sample();
 
+        for (int i = 1 ; i <= 400 ; i += 100) {
+            sample.run(i, i + 99);
+        }
 
-        for (int i = 2170001 ; i <= 3000000; i += 5000) {
-            sample.run(i, i + 4999);
+        // 받아온 xls파일 비어있을 때 예외처리
+        if(sample.data.size() != 0) {
+            for (int i=0; i<sample.data.size(); i+=2) {
+                sample.run(sample.data.get(i),sample.data.get(i+1));
+            }
         }
 
     }
 
     public static class Sample {
+
+        private final List<Integer> data = new LinkedList<>();
+
         private final String defaultPath = "./data/";
         private final String csvPath = "./csv/";
         private final URL baseUrl;
@@ -48,6 +54,9 @@ public class DataPipeline {
             } catch (MalformedURLException e) {
                 throw new RuntimeException(e);
             }
+        }
+
+        public Sample() {
         }
 
         /**
@@ -238,6 +247,7 @@ public class DataPipeline {
                 }
 
                 FileOutputStream fos = new FileOutputStream(outputFile);
+                // CSV파일 UTF-8로 저장
                 fos.write(data.toString().getBytes(StandardCharsets.UTF_8));
                 fos.close();
 
@@ -308,9 +318,19 @@ public class DataPipeline {
 
         public String testxls(String filename, int from, int to) throws IOException, InvalidFormatException {
 
-            String patentdata = "patent" + from + "-" + to;
+            String patentdata = "patent"+String.format("%08d", from)+"-" +to;
             String newfile = defaultPath + patentdata + ".xls";
             File oldfile = new File(defaultPath + filename);
+            Long filesize = oldfile.length() / 1024;
+
+
+            if(filesize < 10) {
+                System.out.println(patentdata + "비어있음");
+                data.add(from);
+                data.add(to);
+            }
+
+
             InputStreamReader isr = new InputStreamReader(System.in);
             FileInputStream file = new FileInputStream(defaultPath + filename);
 
